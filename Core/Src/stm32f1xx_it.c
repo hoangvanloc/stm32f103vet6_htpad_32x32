@@ -26,8 +26,6 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
-extern bool ReadingRoutineEnable;
-extern uint8_t NewDataAvailable;
 /* USER CODE END TD */
 
 /* Private define ------------------------------------------------------------*/
@@ -57,6 +55,7 @@ extern uint8_t NewDataAvailable;
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim3;
+extern DMA_HandleTypeDef hdma_usart1_rx;
 extern UART_HandleTypeDef huart1;
 /* USER CODE BEGIN EV */
 
@@ -201,24 +200,26 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles DMA1 channel5 global interrupt.
+  */
+void DMA1_Channel5_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel5_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel5_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_usart1_rx);
+  /* USER CODE BEGIN DMA1_Channel5_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel5_IRQn 1 */
+}
+
+/**
   * @brief This function handles TIM3 global interrupt.
   */
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-	  // read new sensor data
-  if (ReadingRoutineEnable)
-  {
-	/*
-	   HINT:
-	   this interrupt service routine set a flag called NedDataAvailable.
-	   This flag will be checked in the main loop. If this flag is set, the main loop will call
-	   the function to read the new sensor data and reset this flag and the timer. I go that way
-	   because the ESP32 cannot read I2C data directly in the TimerISR. If your µC can handle I2C in
-	   an interrupt,please read the new sensor volatges direclty in the TimerISR.
-	*/
-	NewDataAvailable = 1;
-  }
+
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */

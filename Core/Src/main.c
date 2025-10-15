@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "i2c.h"
 #include "tim.h"
 #include "usart.h"
@@ -28,6 +29,7 @@
 #include "htpad_32x32.h"
 #include <stdio.h>
 #include "i2c_scan.h"
+#include "uart_printf.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,9 +44,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define RXBUFFERSIZE               2
-uint8_t uart_rx_buff[RXBUFFERSIZE];
-uint8_t rx_done = 0;
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -92,20 +92,19 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   printf("Application start!\n");
+  uart_start_receive();
   if (HAL_TIM_Base_Start_IT(&htim3) != HAL_OK)
   {
     /* Starting Error */
     Error_Handler();
   }
-	if(HAL_UART_Receive_IT(&huart1, (uint8_t *)uart_rx_buff, RXBUFFERSIZE) != HAL_OK)
-	{
-	  Error_Handler();
-	}
+
   setup();
   /* USER CODE END 2 */
 
@@ -158,28 +157,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void _putchar(char character)
-{
-	HAL_UART_Transmit(&huart1,(uint8_t *)&character, 1, 10);
-}
 
-void __io_putchar(uint8_t ch)
-{
-	HAL_UART_Transmit(&huart1, &ch, 1, HAL_MAX_DELAY);
-}
-
-int _write(int file, char *ptr, int len)
-{
-	(void)file;
-	 int DataIdx;
-
-	  for (DataIdx = 0; DataIdx < len; DataIdx++)
-	  {
-	    __io_putchar(*ptr++);
-	  }
-	 setbuf(stdout, NULL);
-	 return len;
-}
 /**
   * @brief  Rx Transfer completed callback
   * @param  UartHandle: UART handle
@@ -187,12 +165,7 @@ int _write(int file, char *ptr, int len)
   *         you can add your own implementation.
   * @retval None
   */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
-{
-  /* Set transmission flag: transfer complete */
-  rx_done = 1;
 
-}
 /* USER CODE END 4 */
 
 /**

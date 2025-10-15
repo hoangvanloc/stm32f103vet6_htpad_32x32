@@ -35,10 +35,10 @@
 #include "common.h"
 #include "htpad_32x32.h"
 #include <stdio.h>
+#include "uart_printf.h"
 extern I2C_HandleTypeDef hi2c1;
 extern TIM_HandleTypeDef htim3;
-extern uint8_t rx_done;
-extern uint8_t uart_rx_buff[2];
+
 //-----------------------------------------
 
 // STRUCT WITH ALL SENSOR CHARACTERISTICS
@@ -165,7 +165,7 @@ uint8_t pinLEDred = 33;
 uint8_t pinLEDgreen = 25;
 uint8_t pinLEDblue = 32;
 
-uint8_t NewDataAvailable = 1;
+uint8_t NewDataAvailable = 0;
 
 uint16_t timert;
 char serial_input = 'm';
@@ -265,7 +265,26 @@ void setup(void)
 
 }
 
-
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if (htim->Instance == TIM3)
+    {
+     // Called when TIM3 reaches its period and overflows
+  	  // read new sensor data
+		if (ReadingRoutineEnable)
+		{
+		/*
+		   HINT:
+		   this interrupt service routine set a flag called NedDataAvailable.
+		   This flag will be checked in the main loop. If this flag is set, the main loop will call
+		   the function to read the new sensor data and reset this flag and the timer. I go that way
+		   because the ESP32 cannot read I2C data directly in the TimerISR. If your µC can handle I2C in
+		   an interrupt,please read the new sensor volatges direclty in the TimerISR.
+		*/
+		NewDataAvailable = 1;
+		}
+    }
+}
 
 
 /********************************************************************
@@ -294,16 +313,17 @@ void loop(void)
 
   /* check if the timer interrupt set the NewDataAvailable flag. If so
      read the new raw pixel data via I2C */
-  if (NewDataAvailable) {
+  if (NewDataAvailable)
+  {
     readblockinterrupt();
     NewDataAvailable = 0;
   }
 
- if(millis() - old_time > SEND_DUTY)
- {
-  old_time = millis();
-  print_state = 4;
- }
+// if(((millis() - old_time)&0xFFFFFFFF) > SEND_DUTY)
+// {
+//  old_time = millis();
+//  print_state = 4;
+// }
 #ifdef SERIALMODE
   checkSerial();
 #endif
@@ -325,6 +345,7 @@ void loop(void)
         calculate_pixel_temp();
         if(print_state == 4)
         {
+
         }else
         {
           print_final_array();
@@ -527,7 +548,7 @@ uint16_t calc_timert(uint8_t clk, uint8_t mbit)
   float a;
   uint16_t calculated_timer_duration;
 
-  float Fclk_float = 12000000.0 / 63.0 * (float)clk + 1000000.0;    // calc clk in Hz
+  float Fclk_float = 12000000.0 / 63.0 * (double)clk + 1000000.0;    // calc clk in Hz
   a = 32.0 * ((float)pow(2, (uint8_t)(mbit & 0b00001111)) + 4.0) / Fclk_float;
 
   calculated_timer_duration =(uint16_t)(0.98 * a * 1000000); // c in s | timer_duration in µs
@@ -872,7 +893,7 @@ void read_eeprom(void)
  *******************************************************************/
 void read_sensor_register(uint16_t addr, uint8_t *dest, uint16_t n)
 {
-  HAL_I2C_Mem_Read(&hi2c1, SENSOR_ADDRESS, addr, I2C_MEMADD_SIZE_8BIT, dest, n, 100);
+  HAL_I2C_Mem_Read(&hi2c1, SENSOR_ADDRESS << 1, addr, I2C_MEMADD_SIZE_8BIT, dest, n, 100);
 }
 
 
@@ -1167,24 +1188,19 @@ void print_RAM_array(void)
   printf("\n\n\n");
 }
 
+
 /********************************************************************
    Function:        checkSerial()
    Description:
  *******************************************************************/
 void checkSerial(void)
 {
-
-  if(rx_done)
+  if(serial_available())
   {
-	  rx_done = 0;
+	  serial_input = serial_read();
   }else
   {
 	  return;
-  }
-
-  if(uart_rx_buff[1] = "\n" || uart_rx_buff[1] == "\r")
-  {
-	  serial_input = uart_rx_buff[0];
   }
   switch (serial_input)
   {

@@ -8,6 +8,8 @@
 #ifndef SRC_HTPAD_32X32_H_
 #define SRC_HTPAD_32X32_H_
 
+#define RXBUFFERSIZE              2
+
 void read_eeprom(void);
 void write_sensor_byte(uint8_t deviceaddress, uint8_t registeraddress, uint8_t input);
 void write_calibration_settings_to_sensor(void);
