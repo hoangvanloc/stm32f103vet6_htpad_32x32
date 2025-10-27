@@ -29,7 +29,7 @@ void print_final_array(void);
 void pixel_masking(void);
 void print_eeprom_hex(void);
 void print_eeprom_header(void);
-void read_sensor_register(uint16_t addr, uint8_t *dest, uint16_t n);
+uint8_t read_sensor_register(uint16_t addr, uint8_t *dest, uint16_t n);
 uint8_t read_EEPROM_byte(uint16_t address);
 
 void setup(void);

@@ -81,84 +81,86 @@ typedef struct
 characteristics DevConst = DevConstDEF;
 //-----------------------------------------
 // EEPROM DATA
-uint8_t mbit_calib, bias_calib, clk_calib, bpa_calib, pu_calib, mbit_user, bias_user, clk_user, bpa_user, pu_user;
-uint8_t nrofdefpix, gradscale, vddscgrad, vddscoff, epsilon, lastepsilon, arraytype;
-uint8_t deadpixmask[ALLOWED_DEADPIX];
-signed char globaloff;
-signed short thgrad[PIXEL_PER_COLUMN][PIXEL_PER_ROW];
-uint16_t tablenumber, vddth1, vddth2, ptatth1, ptatth2, ptatgr, globalgain;
-uint16_t deadpixadr[ALLOWED_DEADPIX * 2];
-signed short thoffset[PIXEL_PER_COLUMN][PIXEL_PER_ROW];
-signed short vddcompgrad[ROW_PER_BLOCK * 2][PIXEL_PER_ROW];
-signed short vddcompoff[ROW_PER_BLOCK * 2][PIXEL_PER_ROW];
-uint32_t id, ptatoff;
-float ptatgr_float, ptatoff_float, pixcmin, pixcmax, bw;
-// use a heap allocated memory to store the pixc instead of a nxm array
-uint32_t *pixc2_0; // start address of the allocated heap memory
-uint32_t *pixc2; // increasing address pointer
-
 //-----------------------------------------
-// SENSOR DATA
-uint16_t data_pixel[PIXEL_PER_COLUMN][PIXEL_PER_ROW];
-uint8_t RAMoutput[2 * NUMBER_OF_BLOCKS + 2][BLOCK_LENGTH];
-/*
-  RAMoutput is the place where the raw values are saved
+  // EEPROM DATA
+  unsigned char mbit_calib, bias_calib, clk_calib, bpa_calib, pu_calib, mbit_user, bias_user, clk_user, bpa_user, pu_user;
+  unsigned char nrofdefpix, gradscale, vddscgrad, vddscoff, epsilon, lastepsilon, arraytype;
+  unsigned char deadpixmask[ALLOWED_DEADPIX];
+  signed char globaloff;
+  signed short thgrad[PIXEL_PER_COLUMN][PIXEL_PER_ROW];
+  unsigned short tablenumber, vddth1, vddth2, ptatth1, ptatth2, ptatgr, globalgain;
+  unsigned short deadpixadr[ALLOWED_DEADPIX * 2];
+  signed short thoffset[PIXEL_PER_COLUMN][PIXEL_PER_ROW];
+  signed short vddcompgrad[ROW_PER_BLOCK * 2][PIXEL_PER_ROW];
+  signed short vddcompoff[ROW_PER_BLOCK * 2][PIXEL_PER_ROW];
+  unsigned long id, ptatoff;
+  float ptatgr_float, ptatoff_float, pixcmin, pixcmax, bw;
+  // use a heap allocated memory to store the pixc instead of a nxm array
+  unsigned long *pixc2_0; // start address of the allocated heap memory
+  unsigned long *pixc2; // increasing address pointer
 
-  example, order for 80x64:
-  RAMoutput[0][]... data from block 0 top
-  RAMoutput[1][]... data from block 1 top
-  RAMoutput[2][]... data from block 2 top
-  RAMoutput[3][]... data from block 3 top
-  RAMutput[4][]... electrical offset top
-  RAMoutput[5][]... electrical offset bottom
-  RAMoutput[6][]... data from block 3 bottom
-  RAMoutput[7][]... data from block 2 bottom
-  RAMoutput[8][]... data from block 1 bottom
-  RAMoutput[9][]... data from block 0 bottom
+  //-----------------------------------------
+  // SENSOR DATA
+  unsigned short data_pixel[PIXEL_PER_COLUMN][PIXEL_PER_ROW];
+  unsigned char RAMoutput[2 * NUMBER_OF_BLOCKS + 2][BLOCK_LENGTH];
+  /*
+    RAMoutput is the place where the raw values are saved
 
-*/
-uint16_t eloffset[ROW_PER_BLOCK * 2][PIXEL_PER_ROW];
-uint8_t statusreg;
-uint16_t Ta, ptat_av_uint16, vdd_av_uint16;
+    example, order for 80x64:
+    RAMoutput[0][]... data from block 0 top
+    RAMoutput[1][]... data from block 1 top
+    RAMoutput[2][]... data from block 2 top
+    RAMoutput[3][]... data from block 3 top
+    RAMutput[4][]... electrical offset top
+    RAMoutput[5][]... electrical offset bottom
+    RAMoutput[6][]... data from block 3 bottom
+    RAMoutput[7][]... data from block 2 bottom
+    RAMoutput[8][]... data from block 1 bottom
+    RAMoutput[9][]... data from block 0 bottom
+
+  */
+  unsigned short eloffset[ROW_PER_BLOCK * 2][PIXEL_PER_ROW];
+  unsigned char statusreg;
+  unsigned short Ta, ptat_av_uint16, vdd_av_uint16;
 
 
-// BUFFER for PTAT,VDD and elOffsets
-// PTAT:
-uint16_t ptat_buffer[PTAT_BUFFER_SIZE];
-uint16_t ptat_buffer_average;
-uint8_t use_ptat_buffer = 0;
-uint8_t ptat_i = 0;
-uint8_t PTATok = 0;
-// VDD:
-uint16_t vdd_buffer[VDD_BUFFER_SIZE];
-uint16_t vdd_buffer_average;
-uint8_t use_vdd_buffer = 0;
-uint8_t vdd_i = 0;
-// electrical offsets:
-uint8_t use_eloffsets_buffer = 0;
-uint8_t eloffsets_i = 0;
-uint8_t new_offsets = 1;
+  // BUFFER for PTAT,VDD and elOffsets
+  // PTAT:
+  uint16_t ptat_buffer[PTAT_BUFFER_SIZE];
+  uint16_t ptat_buffer_average;
+  uint8_t use_ptat_buffer = 0;
+  uint8_t ptat_i = 0;
+  uint8_t PTATok = 0;
+  // VDD:
+  uint16_t vdd_buffer[VDD_BUFFER_SIZE];
+  uint16_t vdd_buffer_average;
+  uint8_t use_vdd_buffer = 0;
+  uint8_t vdd_i = 0;
+  // electrical offsets:
+  uint8_t use_eloffsets_buffer = 0;
+  uint8_t eloffsets_i = 0;
+  uint8_t new_offsets = 1;
 
-// PROGRAMM CONTROL
-bool switch_ptat_vdd = 0;
-uint8_t adr_offset = 0x00;
-uint8_t send_data = 0;
-uint16_t picnum = 0;
-uint8_t state = 0;
-uint8_t read_block_num = START_WITH_BLOCK; // start with electrical offset
-uint8_t read_eloffset_next_pic = 0;
-uint8_t gui_mode = 0;
-uint8_t wait_pic = 0;
-bool ReadingRoutineEnable = 1;
+  // PROGRAMM CONTROL
+  bool switch_ptat_vdd = 0;
+  unsigned char adr_offset = 0x00;
+  unsigned char send_data = 0;
+  unsigned short picnum = 0;
+  unsigned char state = 0;
+  unsigned char read_block_num = START_WITH_BLOCK; // start with electrical offset
+  unsigned char read_eloffset_next_pic = 0;
+  unsigned char gui_mode = 0;
+  unsigned char wait_pic = 0;
+  bool ReadingRoutineEnable = 1;
 
-// OTHER
-uint32_t gradscale_div;
-uint32_t vddscgrad_div;
-uint32_t vddscoff_div;
-int vddcompgrad_n;
-int vddcompoff_n;
-uint32_t t1;
-uint8_t print_state = 0;
+  // OTHER
+  uint32_t gradscale_div;
+  uint32_t vddscgrad_div;
+  uint32_t vddscoff_div;
+  int vddcompgrad_n;
+  int vddcompoff_n;
+  unsigned long t1;
+  unsigned char print_state = 0;
 
 //LEDs
 uint8_t pinLEDred = 33;
@@ -175,6 +177,14 @@ uint8_t send_flag = 0;
 #define SEND_DUTY        100
 
 
+void i2c_set_clock(I2C_HandleTypeDef *hi2c, uint16_t clock_speed)
+{
+  hi2c->Init.ClockSpeed = clock_speed;
+  if (HAL_I2C_Init(hi2c) != HAL_OK)
+  {
+	Error_Handler();
+  }
+}
 
 /********************************************************************
  ********************************************************************
@@ -186,6 +196,7 @@ uint8_t send_flag = 0;
     set_LED(uint8_t red, uint8_t green, uint8_t blue)
  ********************************************************************
  *********************************************************************/
+
 
 
 /********************************************************************
@@ -221,8 +232,12 @@ void setup(void)
     uint8_t data = 0x00;
     error = HAL_I2C_Master_Transmit(&hi2c1,  (SENSOR_ADDRESS << 1) | 0x01, &data, 1, 10);
   }
+//  i2c_set_clock(&hi2c1, CLOCK_EEPROM); // I2C clock frequency 400kHz (for eeprom communication)
+
   read_eeprom();
 
+  // I2C clock frequency (for sensor communication)
+//  i2c_set_clock(&hi2c1, CLOCK_SENSOR);
 
 
   //*******************************************************************
@@ -255,6 +270,12 @@ void setup(void)
   //*******************************************************************
   timert = calc_timert(clk_calib, mbit_calib);
   __HAL_TIM_SET_AUTORELOAD(&htim3, timert);
+  if (HAL_TIM_Base_Start_IT(&htim3) != HAL_OK)
+	{
+	  /* Starting Error */
+	  Error_Handler();
+	}
+
 
   //*******************************************************************
   // print the menu for the first time
@@ -273,15 +294,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   	  // read new sensor data
 		if (ReadingRoutineEnable)
 		{
-		/*
-		   HINT:
-		   this interrupt service routine set a flag called NedDataAvailable.
-		   This flag will be checked in the main loop. If this flag is set, the main loop will call
-		   the function to read the new sensor data and reset this flag and the timer. I go that way
-		   because the ESP32 cannot read I2C data directly in the TimerISR. If your µC can handle I2C in
-		   an interrupt,please read the new sensor volatges direclty in the TimerISR.
-		*/
-		NewDataAvailable = 1;
+			/*
+			   HINT:
+			   this interrupt service routine set a flag called NedDataAvailable.
+			   This flag will be checked in the main loop. If this flag is set, the main loop will call
+			   the function to read the new sensor data and reset this flag and the timer. I go that way
+			   because the ESP32 cannot read I2C data directly in the TimerISR. If your µC can handle I2C in
+			   an interrupt,please read the new sensor volatges direclty in the TimerISR.
+			*/
+			NewDataAvailable = 1;
 		}
     }
 }
@@ -298,9 +319,7 @@ void printWrongLUT() {
       if (LUTshape[m][n] == 1)
         data_pixel[m][n] = 2732;
     }
-
   }
-
 }
 
 
@@ -390,12 +409,12 @@ void loop(void)
    Description:   calculates the pixel constants with the unscaled
                   values from EEPROM
  *******************************************************************/
-void calcPixC(void)
-{
+
+void calcPixC() {
 
   /* uses the formula from datasheet:
 
-                     PixC_uns[m][n]*(PixCmax-PixCmin)               epsilon   GlobalGain
+                    PixC_uns[m][n]*(PixCmax-PixCmin)               epsilon   GlobalGain
       PixC[m][n] = ( -------------------------------- + PixCmin ) * ------- * ----------
                                   65535                               100        1000
   */
@@ -417,7 +436,7 @@ void calcPixC(void)
       pixcij *= (double)globalgain;
       pixcij += 0.5;
 
-      *pixc2 = (uint32_t)pixcij;
+      *pixc2 = (unsigned long)pixcij;
       pixc2++;
 
     }
@@ -427,13 +446,12 @@ void calcPixC(void)
 
 }
 
-
 /********************************************************************
    Function:        calculate_pixel_temp()
-   Description:     compensate thermal, electrical offset and vdd and multiply sensitivity coeff
+  Description:     compensate thermal, electrical offset and vdd and multiply sensitivity coeff
                     look for the correct temp in lookup table
- *******************************************************************/
-void calculate_pixel_temp(void)
+*******************************************************************/
+void calculate_pixel_temp()
 {
 
   int64_t vij_pixc_and_pcscaleval;
@@ -461,18 +479,18 @@ void calculate_pixel_temp(void)
 
       /******************************************************************************************************************
          step 1: use a variable with bigger data format for the compensation steps
-       ******************************************************************************************************************/
+      ******************************************************************************************************************/
       pixel = (signed long) data_pixel[m][n];
 
       /******************************************************************************************************************
          step 2: compensate thermal drifts (see datasheet, chapter: Thermal Offset)
-       ******************************************************************************************************************/
+      ******************************************************************************************************************/
       pixel -= (int32_t)(((int32_t)thgrad[m][n] * (int32_t)ptat_av_uint16) / (int32_t)gradscale_div);
       pixel -= (int32_t)thoffset[m][n];
 
       /******************************************************************************************************************
          step 3: compensate electrical offset (see datasheet, chapter: Electrical Offset)
-       ******************************************************************************************************************/
+      ******************************************************************************************************************/
       if (m < DevConst.PixelPerColumn / 2) { // top half
         pixel -= eloffset[m % DevConst.RowPerBlock][n];
       }
@@ -482,7 +500,7 @@ void calculate_pixel_temp(void)
 
       /******************************************************************************************************************
          step 4: compensate vdd (see datasheet, chapter: Vdd Compensation)
-       ******************************************************************************************************************/
+      ******************************************************************************************************************/
       // first select VddCompGrad and VddCompOff for pixel m,n:
       if (m < DevConst.PixelPerColumn / 2) {      // top half
         vddcompgrad_n = vddcompgrad[m % DevConst.RowPerBlock][n];
@@ -502,13 +520,13 @@ void calculate_pixel_temp(void)
 
       /******************************************************************************************************************
          step 5: multiply sensitivity coeff for each pixel (see datasheet, chapter: Object Temperature)
-       ******************************************************************************************************************/
+      ******************************************************************************************************************/
       vij_pixc_and_pcscaleval = pixel * (int64_t)PCSCALEVAL;
       pixel =  (int32_t)(vij_pixc_and_pcscaleval / *pixc2);
       pixc2++;
       /******************************************************************************************************************
          step 6: find correct temp for this sensor in lookup table and do a bilinear interpolation (see datasheet, chapter:  Look-up table)
-       ******************************************************************************************************************/
+      ******************************************************************************************************************/
       table_row = pixel + TABLEOFFSET;
       table_row = table_row >> ADEXPBITS;
       // bilinear interpolation
@@ -518,13 +536,13 @@ void calculate_pixel_temp(void)
 
       /******************************************************************************************************************
          step 7: add GlobalOffset (stored as signed char)
-       ******************************************************************************************************************/
+      ******************************************************************************************************************/
       pixel += globaloff;
 
       /******************************************************************************************************************
         step 8: overwrite the uncompensate pixel with the new calculated compensated value
       ******************************************************************************************************************/
-      data_pixel[m][n] = (uint16_t)pixel;
+      data_pixel[m][n] = (unsigned short)pixel;
 
     }
   }
@@ -536,7 +554,6 @@ void calculate_pixel_temp(void)
 
 
 }
-
 
 /********************************************************************
    Function:      calc_timert(uint8_t clk, uint8_t mbit)
@@ -687,10 +704,11 @@ void readblockinterrupt(void)
   // wait for end of conversion bit (~27ms)
 
   // check EOC bit
-  read_sensor_register( STATUS_REGISTER, (uint8_t*)&statusreg, 1);
-  while ((statusreg & 0x01) == 0)
+  uint8_t result;
+  result = read_sensor_register( STATUS_REGISTER, (uint8_t*)&statusreg, 1);
+  while ((statusreg & 0x01) == 0 || (result != HAL_OK))
   {
-    read_sensor_register( STATUS_REGISTER, (uint8_t*)&statusreg, 1);
+	  result = read_sensor_register( STATUS_REGISTER, (uint8_t*)&statusreg, 1);
   }
   // get data of top half:
   read_sensor_register( TOP_HALF, (uint8_t*)&RAMoutput[read_block_num], BLOCK_LENGTH);
@@ -891,9 +909,9 @@ void read_eeprom(void)
    Function:        void read_sensor_register( uint16_t addr, uint8_t *dest, uint16_t n)
    Description:     read sensor register
  *******************************************************************/
-void read_sensor_register(uint16_t addr, uint8_t *dest, uint16_t n)
+uint8_t read_sensor_register(uint16_t addr, uint8_t *dest, uint16_t n)
 {
-  HAL_I2C_Mem_Read(&hi2c1, SENSOR_ADDRESS << 1, addr, I2C_MEMADD_SIZE_8BIT, dest, n, 100);
+  return HAL_I2C_Mem_Read(&hi2c1, SENSOR_ADDRESS << 1, addr, I2C_MEMADD_SIZE_8BIT, dest, n, HAL_MAX_DELAY);
 }
 
 
@@ -1337,7 +1355,9 @@ void checkSerial(void)
       if (epsilon < 100) {
         epsilon++;
 
-        write_EEPROM_byte(E_EPSILON, epsilon);
+        i2c_set_clock(&hi2c1, CLOCK_EEPROM); // I2C clock frequency 400kHz (for eeprom communication)
+	    write_EEPROM_byte(E_EPSILON, epsilon);
+        i2c_set_clock(&hi2c1,CLOCK_SENSOR);
 
 
         // calculate pixcij with new epsilon
@@ -1367,7 +1387,10 @@ void checkSerial(void)
       printf("\nnew emissivity: \t");
       if (epsilon > 0) {
         epsilon--;
-        write_EEPROM_byte(E_EPSILON, epsilon);
+
+        i2c_set_clock(&hi2c1, CLOCK_EEPROM); // I2C clock frequency 400kHz (for eeprom communication)
+	    write_EEPROM_byte(E_EPSILON, epsilon);
+        i2c_set_clock(&hi2c1,CLOCK_SENSOR);
         // calculate pixcij with new epsilon
         pixc2 = pixc2_0; // set pointer to start address of the allocated heap
         double d = (double)epsilon / (double)lastepsilon;
