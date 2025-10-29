@@ -36,6 +36,7 @@
 #include "htpad_32x32.h"
 #include <stdio.h>
 #include "uart_printf.h"
+#include "stm32f1xx_ll_i2c.h"
 extern I2C_HandleTypeDef hi2c1;
 extern TIM_HandleTypeDef htim3;
 
@@ -217,13 +218,11 @@ void setup(void)
   uint8_t error = HAL_ERROR;
   while (error != HAL_OK)
   {
-    HAL_Delay(200);
-    // Reinitialize the I2C peripheral
-    HAL_I2C_DeInit(&hi2c1);
-    HAL_I2C_Init(&hi2c1);
-
-    // Check device readiness
-     error = HAL_I2C_IsDeviceReady(&hi2c1, SENSOR_ADDRESS << 1, 3, 100);
+	 // (Re)initialize I2C peripheral if needed
+	 HAL_I2C_DeInit(&hi2c1);
+	 HAL_I2C_Init(&hi2c1);
+	 HAL_Delay(200); // wait 2 seconds
+     error = HAL_I2C_IsDeviceReady(&hi2c1, SENSOR_ADDRESS << 1, 1, 100);
   }
   read_eeprom();
 
@@ -700,7 +699,7 @@ void readblockinterrupt(void)
   while ((statusreg & 0x01) == 0)
   {
     read_sensor_register( STATUS_REGISTER, (uint8_t*)&statusreg, 1);
-    HAL_Delay(1);
+    HAL_Delay(100);
   }
   // get data of top half:
   read_sensor_register( TOP_HALF, (uint8_t*)&RAMoutput[read_block_num], BLOCK_LENGTH);
@@ -903,7 +902,59 @@ void read_eeprom(void)
  *******************************************************************/
 void read_sensor_register(uint16_t addr, uint8_t *dest, uint16_t n)
 {
-	HAL_I2C_Mem_Read(&hi2c1, SENSOR_ADDRESS << 1, addr, I2C_MEMADD_SIZE_8BIT, dest, n, HAL_MAX_DELAY);
+
+//	    uint32_t timeout = 1000;
+//
+//	    // 1. Generate START condition
+//	    LL_I2C_GenerateStartCondition(hi2c1.Instance);
+//
+//	    // 2. Wait for START condition to be generated
+//	    while (!LL_I2C_IsActiveFlag_SB(hi2c1.Instance)) {
+//	        if (--timeout == 0) return;
+//	    }
+//
+//	    // 3. Send slave address with write bit (0)
+//	    LL_I2C_TransmitData8(hi2c1.Instance, SENSOR_ADDRESS << 1);
+//
+//	    // 4. Wait for address to be acknowledged
+//	    while (!LL_I2C_IsActiveFlag_ADDR(hi2c1.Instance)) {
+//	        if (--timeout == 0) return;
+//	    }
+//	    LL_I2C_ClearFlag_ADDR(hi2c1.Instance);
+//
+//	    // 5. Send register address
+//	    while (!LL_I2C_IsActiveFlag_TXE(hi2c1.Instance)) {
+//	        if (--timeout == 0) return;
+//	    }
+//	    LL_I2C_TransmitData8(hi2c1.Instance, addr);
+//
+//	    // 6. Wait for TXE
+//	    while (!LL_I2C_IsActiveFlag_TXE(hi2c1.Instance)) {
+//	        if (--timeout == 0) return;
+//	    }
+//
+//
+//
+//
+//	    // 11. Disable ACK (for single byte read)
+//	    LL_I2C_AcknowledgeNextData(hi2c1.Instance, 0);
+//
+//	    // 12. Wait for RXNE
+//	    while (!LL_I2C_IsActiveFlag_RXNE(hi2c1.Instance)) {
+//	        if (--timeout == 0) return;
+//	    }
+//       uint16_t num;
+//	    while(num ++ < n)
+//	    {
+//	    // 13. Read data
+//	    	*dest  = LL_I2C_ReceiveData8(hi2c1.Instance);
+//	    	dest++;
+//	    }
+//	    // 14. Generate STOP condition
+//	    LL_I2C_GenerateStopCondition(hi2c1.Instance);
+
+      HAL_I2C_Mem_Read(&hi2c1, SENSOR_ADDRESS << 1, addr, I2C_MEMADD_SIZE_8BIT , dest, n, 1000);
+
 }
 
 
@@ -1084,7 +1135,7 @@ void write_calibration_settings_to_sensor(void)
 void write_EEPROM_byte(uint16_t address, uint8_t content )
 {
   uint8_t data[] = {address >> 8, address & 0xff,content};
-  HAL_I2C_Master_Transmit(&hi2c1, (EEPROM_ADDRESS << 1) | 0x01, data, 3, 100);
+  HAL_I2C_Master_Transmit(&hi2c1, EEPROM_ADDRESS << 1, data, 3, 100);
 }
 
 
@@ -1115,7 +1166,7 @@ void write_sensor_byte(uint8_t deviceaddress, uint8_t registeraddress, uint8_t i
 {
 
   uint8_t byte_dat[]= {registeraddress,input};
-  HAL_I2C_Master_Transmit(&hi2c1, (deviceaddress << 1) | 0x01, byte_dat, 2, 100);
+  HAL_I2C_Master_Transmit(&hi2c1, deviceaddress << 1, byte_dat, 2, 100);
 
 }
 
