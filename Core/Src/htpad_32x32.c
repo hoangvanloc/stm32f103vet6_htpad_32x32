@@ -218,8 +218,12 @@ void setup(void)
   while (error != HAL_OK)
   {
     HAL_Delay(200);
-    uint8_t data = 0x00;
-    error = HAL_I2C_Master_Transmit(&hi2c1,  (SENSOR_ADDRESS << 1) | 0x01, &data, 1, 10);
+    // Reinitialize the I2C peripheral
+    HAL_I2C_DeInit(&hi2c1);
+    HAL_I2C_Init(&hi2c1);
+
+    // Check device readiness
+     error = HAL_I2C_IsDeviceReady(&hi2c1, SENSOR_ADDRESS << 1, 3, 100);
   }
   read_eeprom();
 
@@ -254,8 +258,13 @@ void setup(void)
   // timer initialization
   //*******************************************************************
   timert = calc_timert(clk_calib, mbit_calib);
-  __HAL_TIM_SET_AUTORELOAD(&htim3, timert);
 
+  __HAL_TIM_SET_AUTORELOAD(&htim3, timert);
+  if (HAL_TIM_Base_Start_IT(&htim3) != HAL_OK)
+  {
+    /* Starting Error */
+    Error_Handler();
+  }
   //*******************************************************************
   // print the menu for the first time
   //*******************************************************************
@@ -691,6 +700,7 @@ void readblockinterrupt(void)
   while ((statusreg & 0x01) == 0)
   {
     read_sensor_register( STATUS_REGISTER, (uint8_t*)&statusreg, 1);
+    HAL_Delay(1);
   }
   // get data of top half:
   read_sensor_register( TOP_HALF, (uint8_t*)&RAMoutput[read_block_num], BLOCK_LENGTH);
@@ -893,7 +903,7 @@ void read_eeprom(void)
  *******************************************************************/
 void read_sensor_register(uint16_t addr, uint8_t *dest, uint16_t n)
 {
-  HAL_I2C_Mem_Read(&hi2c1, SENSOR_ADDRESS << 1, addr, I2C_MEMADD_SIZE_8BIT, dest, n, 100);
+	HAL_I2C_Mem_Read(&hi2c1, SENSOR_ADDRESS << 1, addr, I2C_MEMADD_SIZE_8BIT, dest, n, HAL_MAX_DELAY);
 }
 
 

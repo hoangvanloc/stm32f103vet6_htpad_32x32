@@ -99,11 +99,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printf("Application start!\n");
   uart_start_receive();
-  if (HAL_TIM_Base_Start_IT(&htim3) != HAL_OK)
-  {
-    /* Starting Error */
-    Error_Handler();
-  }
+
 
   setup();
   /* USER CODE END 2 */
